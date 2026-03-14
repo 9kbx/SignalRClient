@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SignalRClient;
@@ -11,8 +11,11 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IAuthenticationProvider, JwtAuthenticationProvider>();
 
 // 2. 注册 Chat 客户端为单例
-builder.Services.AddChatClient(o => {
-    o.Url = "http://localhost:5068/chat";
+builder.Services.AddChatClient(o =>
+{
+    o.Url =
+        builder.Configuration["SignalR:HubUrl"]
+        ?? throw new InvalidOperationException("Missing configuration: SignalR:HubUrl");
     o.RetryPolicy = new RandomRetryPolicy();
 });
 

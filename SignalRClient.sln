@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRClient", "SignalRCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRClientSample", "SignalRClientSample\SignalRClientSample.csproj", "{7F6715B6-D1A9-447B-905A-1D3044491BEA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRServerSample", "SignalRServerSample\SignalRServerSample.csproj", "{0B57D277-FEB1-4AF8-A3B1-39210EED6377}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{7F6715B6-D1A9-447B-905A-1D3044491BEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F6715B6-D1A9-447B-905A-1D3044491BEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F6715B6-D1A9-447B-905A-1D3044491BEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B57D277-FEB1-4AF8-A3B1-39210EED6377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B57D277-FEB1-4AF8-A3B1-39210EED6377}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B57D277-FEB1-4AF8-A3B1-39210EED6377}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B57D277-FEB1-4AF8-A3B1-39210EED6377}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

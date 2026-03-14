@@ -5,7 +5,6 @@ using SignalRClient;
 
 namespace SignalRClientSample.HubClients;
 
-
 public interface IChatClient
 {
     Task StartAsync(CancellationToken ct = default);
@@ -16,7 +15,9 @@ public interface IChatClient
     event Action<string, string>? OnMessageReceived;
 }
 
-public class ChatClientOptions : SignalRClientOptions { }
+public class ChatClientOptions : SignalRClientOptions
+{
+}
 
 public class SignalRChatClient(
     IAuthenticationProvider auth,
@@ -32,7 +33,6 @@ public class SignalRChatClient(
         _connection.On<string, string>("ReceiveMessage",
             (user, message) => { OnMessageReceived?.Invoke(user, message); });
     }
-
     public async Task SendMessageAsync(string user, string message)
     {
         await _connection.InvokeAsync("SendMessage", user, message);
@@ -41,7 +41,7 @@ public class SignalRChatClient(
     protected override async Task OnClosed(Exception? ex)
     {
         await base.OnClosed(ex);
-    
+
         // 如果是因为授权失败导致的关闭
         if (ex?.Message.Contains("401") == true)
         {
