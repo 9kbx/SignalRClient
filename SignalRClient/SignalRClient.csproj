@@ -6,8 +6,31 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <Authors>Pandax</Authors>
+        <Version>1.0.0</Version>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/9kbx/SignalRClient</RepositoryUrl>
+        <PackageId>Pandax.SignalRClient</PackageId>
+        <PackageTags>signalr;signalr-client;aspnetcore;websocket</PackageTags>
+        <Title>Pandax.SignalRClient</Title>
+        <Description>A lightweight wrapper around the ASP.NET Core SignalR client for building resilient .NET consumers.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+        <AssemblyName>Pandax.SignalRClient</AssemblyName>
+        <RootNamespace>Pandax.SignalRClient</RootNamespace>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="README.md" />
     </ItemGroup>
 
 </Project>

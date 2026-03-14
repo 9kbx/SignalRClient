@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using SignalRClient;
+using Pandax.SignalRClient;
 
 namespace SignalRClientSample;
 
@@ -63,11 +63,10 @@ public class JwtAuthenticationProvider(IHttpClientFactory httpClientFactory, ICo
     {
         Console.WriteLine("Logging in to get tokens...");
         var client = httpClientFactory.CreateClient();
-        var res = await client.PostAsJsonAsync($"{config["Auth:FetchTokenUrl"]}", new
-        {
-            username = config["Auth:Username"],
-            password = config["Auth:Password"]
-        });
+        var res = await client.PostAsJsonAsync(
+            $"{config["Auth:FetchTokenUrl"]}",
+            new { username = config["Auth:Username"], password = config["Auth:Password"] }
+        );
 
         res.EnsureSuccessStatusCode();
         var data = await res.Content.ReadFromJsonAsync<JsonElement>();
@@ -80,12 +79,13 @@ public class JwtAuthenticationProvider(IHttpClientFactory httpClientFactory, ICo
     {
         Console.WriteLine("Refreshing access token...");
         var client = httpClientFactory.CreateClient();
-        var res = await client.PostAsJsonAsync($"{config["Auth:RefreshTokenUrl"]}", new
-        {
-            refreshToken = _refreshToken
-        });
+        var res = await client.PostAsJsonAsync(
+            $"{config["Auth:RefreshTokenUrl"]}",
+            new { refreshToken = _refreshToken }
+        );
 
-        if (!res.IsSuccessStatusCode) throw new Exception("Refresh failed");
+        if (!res.IsSuccessStatusCode)
+            throw new Exception("Refresh failed");
 
         var data = await res.Content.ReadFromJsonAsync<JsonElement>();
         UpdateCache(data);

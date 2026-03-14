@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace SignalRClient;
+namespace Pandax.SignalRClient;
 
 public class SignalRClientOptions
 {

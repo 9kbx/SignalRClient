@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SignalRClient;
+using Pandax.SignalRClient;
 using SignalRClientSample;
 
 var builder = Host.CreateApplicationBuilder(args);

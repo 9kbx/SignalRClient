@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SignalRClient;
+using Pandax.SignalRClient;
 
 namespace SignalRClientSample.HubClients;
 
@@ -15,24 +15,28 @@ public interface IChatClient
     event Action<string, string>? OnMessageReceived;
 }
 
-public class ChatClientOptions : SignalRClientOptions
-{
-}
+public class ChatClientOptions : SignalRClientOptions { }
 
-public class SignalRChatClient(
+public class PandaxSignalRChatClient(
     IAuthenticationProvider auth,
     IOptions<ChatClientOptions> options,
-    ILogger<SignalRChatClient> logger)
-    : BaseSignalRClient<ChatClientOptions>(auth, options, logger), IChatClient
+    ILogger<PandaxSignalRChatClient> logger
+) : BaseSignalRClient<ChatClientOptions>(auth, options, logger), IChatClient
 {
     public event Action<string, string>? OnMessageReceived;
 
     protected override void OnRegisterHubEvents()
     {
         // 绑定业务特有的消息
-        _connection.On<string, string>("ReceiveMessage",
-            (user, message) => { OnMessageReceived?.Invoke(user, message); });
+        _connection.On<string, string>(
+            "ReceiveMessage",
+            (user, message) =>
+            {
+                OnMessageReceived?.Invoke(user, message);
+            }
+        );
     }
+
     public async Task SendMessageAsync(string user, string message)
     {
         await _connection.InvokeAsync("SendMessage", user, message);

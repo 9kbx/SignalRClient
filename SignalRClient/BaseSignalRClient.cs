@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace SignalRClient;
+namespace Pandax.SignalRClient;
 
 public abstract class BaseSignalRClient<TOptions> : IAsyncDisposable
     where TOptions : SignalRClientOptions
@@ -13,17 +13,21 @@ public abstract class BaseSignalRClient<TOptions> : IAsyncDisposable
     protected BaseSignalRClient(
         IAuthenticationProvider authProvider,
         IOptions<TOptions> options,
-        ILogger logger)
+        ILogger logger
+    )
     {
         _logger = logger;
         var settings = options.Value;
 
         _connection = new HubConnectionBuilder()
-            .WithUrl(settings.Url,
+            .WithUrl(
+                settings.Url,
                 httpOptions =>
                 {
-                    httpOptions.AccessTokenProvider = async () => await authProvider.GetAccessTokenAsync();
-                })
+                    httpOptions.AccessTokenProvider = async () =>
+                        await authProvider.GetAccessTokenAsync();
+                }
+            )
             .WithAutomaticReconnect(settings.RetryPolicy)
             .Build();
 

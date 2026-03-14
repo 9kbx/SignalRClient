@@ -1,46 +1,50 @@
-# Pandax.SignalRClient
+# Pandax.SignalRClient 中文文档
 
-SignalRClient is a lightweight wrapper around the ASP.NET Core SignalR client for building resilient .NET consumers.
+SignalRClient 是一个对 ASP.NET Core SignalR Client 的轻量封装，适合在 .NET 后台服务、Worker、控制台程序中快速构建稳定的 SignalR 客户端。
 
-NuGet package: `Pandax.SignalRClient`
+NuGet 包名：`Pandax.SignalRClient`
 
-[中文文档](./README.zh-CN.md)
+[English README](./README.md)
 
-## Features
+## 特性
 
-- Wraps SignalR client connection setup into a reusable base client
-- Supports access token injection through a custom authentication provider
-- Supports configurable retry policies for reconnect behavior
-- Works well in background services and long-running worker processes
+- 基于 `BaseSignalRClient<TOptions>` 统一封装 `HubConnection`
+- 通过 `IAuthenticationProvider` 注入访问令牌
+- 支持自定义重连策略
+- 适合放入依赖注入和后台服务生命周期中管理
+- 默认提供一个基础重连策略 `DefaultRetryPolicy`
 
-## Target Framework
+## 适用场景
 
-- .NET 9.0
+- 后台服务持续监听 Hub 消息
+- 控制台程序连接 SignalR 服务端
+- 需要统一管理连接、鉴权、重连的业务客户端
+- 需要按业务拆分多个 Hub Client 类型
 
-## Installation
+## 安装
 
 ```bash
 dotnet add package Pandax.SignalRClient
 ```
 
-## Core Types
+## 核心类型说明
 
-- `BaseSignalRClient<TOptions>`: the base class that creates and manages `HubConnection`
-- `SignalRClientOptions`: base options with `Url` and `RetryPolicy`
-- `IAuthenticationProvider`: abstraction used to provide an access token for SignalR requests
-- `DefaultRetryPolicy`: built-in retry policy that retries 5 times with a 5 second interval
+- `BaseSignalRClient<TOptions>`：封装连接创建、基础事件注册、启动和释放逻辑
+- `SignalRClientOptions`：基础配置项，包含 `Url` 和 `RetryPolicy`
+- `IAuthenticationProvider`：访问令牌提供器
+- `DefaultRetryPolicy`：默认重连策略，最多重试 5 次，每次间隔 5 秒
 
-## Quick Start
+## 推荐接入方式
 
-The recommended integration pattern is:
+推荐按下面的顺序接入：
 
-1. Implement `IAuthenticationProvider`
-2. Create your options type derived from `SignalRClientOptions`
-3. Create a client class derived from `BaseSignalRClient<TOptions>`
-4. Register the client in dependency injection
-5. Start it from a hosted service or your application entry point
+1. 实现 `IAuthenticationProvider`
+2. 定义一个继承自 `SignalRClientOptions` 的业务配置类
+3. 定义一个继承自 `BaseSignalRClient<TOptions>` 的业务客户端
+4. 通过依赖注入注册客户端
+5. 在 `BackgroundService` 或程序入口中启动客户端
 
-### 1. Implement an authentication provider
+## 1. 实现鉴权提供器
 
 ```csharp
 using Pandax.SignalRClient;
@@ -54,7 +58,9 @@ public sealed class JwtAuthenticationProvider : IAuthenticationProvider
 }
 ```
 
-### 2. Create client options
+如果你的令牌来自刷新接口、缓存或本地存储，也可以在这里自行封装。
+
+## 2. 定义客户端配置
 
 ```csharp
 using Pandax.SignalRClient;
@@ -64,7 +70,7 @@ public sealed class ChatClientOptions : SignalRClientOptions
 }
 ```
 
-## Basic Usage
+## 3. 定义业务客户端
 
 ```csharp
 using Microsoft.Extensions.Logging;
@@ -78,17 +84,13 @@ public interface IChatClient
     event Action<string, string>? OnMessageReceived;
 }
 
-public sealed class ChatClient : BaseSignalRClient<SignalRClientOptions>
+public sealed class ChatClient(
+    IAuthenticationProvider authenticationProvider,
+    IOptions<ChatClientOptions> options,
+    ILogger<ChatClient> logger)
+    : BaseSignalRClient<ChatClientOptions>(authenticationProvider, options, logger), IChatClient
 {
     public event Action<string, string>? OnMessageReceived;
-
-    public ChatClient(
-        IAuthenticationProvider authenticationProvider,
-        IOptions<SignalRClientOptions> options,
-        ILogger<ChatClient> logger)
-        : base(authenticationProvider, options, logger)
-    {
-    }
 
     protected override void OnRegisterHubEvents()
     {
@@ -105,7 +107,13 @@ public sealed class ChatClient : BaseSignalRClient<SignalRClientOptions>
 }
 ```
 
-### 4. Register the client with DI
+这里的关键点是：
+
+- 在 `OnRegisterHubEvents()` 中绑定业务消息
+- 通过 `_connection.InvokeAsync()` 调用服务端 Hub 方法
+- 公共连接、鉴权、重连逻辑由基类统一处理
+
+## 4. 注册到依赖注入
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -123,7 +131,7 @@ public static class ChatClientServiceCollectionExtensions
 }
 ```
 
-### 5. Configure and run it
+## 5. 在宿主中启动
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -144,7 +152,7 @@ builder.Services.AddHostedService<ChatWorker>();
 await builder.Build().RunAsync();
 ```
 
-### Example hosted service
+## 后台服务示例
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -157,7 +165,7 @@ public sealed class ChatWorker(IChatClient chatClient, ILogger<ChatWorker> logge
     {
         chatClient.OnMessageReceived += (user, message) =>
         {
-            logger.LogInformation("New message from {User}: {Message}", user, message);
+            logger.LogInformation("收到来自 {User} 的消息: {Message}", user, message);
         };
 
         await chatClient.StartAsync(stoppingToken);
@@ -171,14 +179,14 @@ public sealed class ChatWorker(IChatClient chatClient, ILogger<ChatWorker> logge
 }
 ```
 
-## Configuration
+## 配置项说明
 
-The client options support at least these settings:
+基础配置如下：
 
-- `Url`: the SignalR hub endpoint
-- `RetryPolicy`: a custom `IRetryPolicy` implementation for reconnects
+- `Url`：SignalR Hub 地址
+- `RetryPolicy`：自定义重连策略
 
-Example configuration:
+配置示例：
 
 ```json
 {
@@ -188,11 +196,11 @@ Example configuration:
 }
 ```
 
-## Reconnect Behavior
+## 自定义重连策略
 
-By default, the library uses `DefaultRetryPolicy`, which retries up to 5 times with a 5 second delay.
+库默认使用 `DefaultRetryPolicy`，即最多重试 5 次，每次间隔 5 秒。
 
-You can replace it with your own implementation:
+如果你想替换成自己的策略，可以这样写：
 
 ```csharp
 using Microsoft.AspNetCore.SignalR.Client;
@@ -208,7 +216,7 @@ public sealed class CustomRetryPolicy : IRetryPolicy
 }
 ```
 
-Then register it through options:
+然后在注册时指定：
 
 ```csharp
 builder.Services.AddChatClient(options =>
@@ -218,20 +226,23 @@ builder.Services.AddChatClient(options =>
 });
 ```
 
-## Sample Projects
+## 示例工程
 
-- `SignalRClientSample`: sample client application using the library
-- `SignalRServerSample`: sample SignalR server for local testing
+- `SignalRClientSample`：客户端示例
+- `SignalRServerSample`：服务端示例
 
-## Release Workflow
+你可以先启动服务端示例，再启动客户端示例，快速验证连接、收发消息和重连行为。
 
-This repository includes a GitHub Actions workflow that publishes the NuGet package when a GitHub Release is published.
+## 发布说明
 
-- Only the `SignalRClient` library is packed and published as `Pandax.SignalRClient`
-- Pre-releases are skipped
-- Both `.nupkg` and `.snupkg` packages are pushed to NuGet
+仓库已配置 GitHub Actions 自动发布流程：
 
-## Repository
+- 在 GitHub 上发布正式 Release 后自动触发
+- 只发布 `SignalRClient` 库，并以 `Pandax.SignalRClient` 包名推送
+- pre-release 不会推送
+- 会同时推送 `.nupkg` 和 `.snupkg`
 
-- Source: [github.com/9kbx/SignalRClient](https://github.com/9kbx/SignalRClient)
-- License: MIT
+## 仓库信息
+
+- 仓库地址：[github.com/9kbx/SignalRClient](https://github.com/9kbx/SignalRClient)
+- 许可证：MIT

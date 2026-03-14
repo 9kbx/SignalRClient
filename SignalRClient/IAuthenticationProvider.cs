@@ -1,4 +1,4 @@
-namespace SignalRClient;
+namespace Pandax.SignalRClient;
 
 public interface IAuthenticationProvider
 {
