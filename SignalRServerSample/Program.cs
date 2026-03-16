@@ -74,7 +74,12 @@ string GenerateAccessToken(string username)
 {
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-    var claims = new[] { new Claim(ClaimTypes.Name, username) };
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, username),
+        new Claim(ClaimTypes.Name, username),
+        new Claim(JwtRegisteredClaimNames.Sub, username),
+    };
     var token = new JwtSecurityToken(
         issuer: jwtIssuer,
         audience: jwtAudience,

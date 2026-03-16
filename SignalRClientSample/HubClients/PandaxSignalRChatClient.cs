@@ -9,7 +9,7 @@ public interface IChatClient
 {
     Task StartAsync(CancellationToken ct = default);
 
-    Task SendMessageAsync(string user, string message);
+    Task SendMessageAsync(string targetUser, string message);
 
     // 定义一个事件或回调，供外部订阅接收到的消息
     event Action<string, string>? OnMessageReceived;
@@ -37,9 +37,9 @@ public class PandaxSignalRChatClient(
         );
     }
 
-    public async Task SendMessageAsync(string user, string message)
+    public async Task SendMessageAsync(string targetUser, string message)
     {
-        await _connection.InvokeAsync("SendMessage", user, message);
+        await _connection.InvokeAsync("SendMessage", targetUser, message);
     }
 
     protected override async Task OnClosed(Exception? ex)

@@ -1,13 +1,22 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SignalRClientSample.HubClients;
 
 namespace SignalRClientSample;
 
-public class ChatWorker(IChatClient chatClient, ILogger<ChatWorker> logger) : BackgroundService
+public class ChatWorker(
+    IChatClient chatClient,
+    ILogger<ChatWorker> logger,
+    IConfiguration configuration
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var currentUser =
+            configuration["Auth:Username"]
+            ?? throw new InvalidOperationException("Auth:Username is required.");
+
         // 订阅消息
         chatClient.OnMessageReceived += (user, msg) =>
         {
@@ -20,7 +29,7 @@ public class ChatWorker(IChatClient chatClient, ILogger<ChatWorker> logger) : Ba
         // 循环发送测试消息
         while (!stoppingToken.IsCancellationRequested)
         {
-            await chatClient.SendMessageAsync("ConsoleApp", $"Heartbeat {DateTime.Now}");
+            await chatClient.SendMessageAsync(currentUser, $"Heartbeat {DateTime.Now}");
             await Task.Delay(5000, stoppingToken);
         }
     }
